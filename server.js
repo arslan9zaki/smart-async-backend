@@ -1,46 +1,46 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import OpenAI from "openai";
-
-dotenv.config();
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+app.post("/api/ai-search", (req, res) => {
+  const { query } = req.body;
 
-app.post("/api/ai-search", async (req, res) => {
-  try {
-    const { query } = req.body;
+  let result = {
+    summary: "Default result",
+    bestSupplierType: "Manufacturer",
+    estimatedPriceRange: "$5–$10",
+    riskLevel: "Low",
+    suggestedCountry: "Vietnam",
+    tips: ["Check supplier reviews", "Negotiate pricing"]
+  };
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a sourcing expert. Return JSON with summary, bestSupplierType, estimatedPriceRange, riskLevel, suggestedCountry, tips."
-        },
-        {
-          role: "user",
-          content: query
-        }
-      ],
-      temperature: 0.7
-    });
-
-    const text = completion.choices[0].message.content;
-
-    res.json(JSON.parse(text));
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "AI failed" });
+  if (query.toLowerCase().includes("china")) {
+    result = {
+      summary: "China is best for electronics",
+      bestSupplierType: "OEM",
+      estimatedPriceRange: "$2–$6",
+      riskLevel: "Medium",
+      suggestedCountry: "China",
+      tips: ["Use Trade Assurance", "Check certifications"]
+    };
   }
+
+  if (query.toLowerCase().includes("india")) {
+    result = {
+      summary: "India is strong in textiles",
+      bestSupplierType: "Specialist Manufacturer",
+      estimatedPriceRange: "$3–$8",
+      riskLevel: "Low",
+      suggestedCountry: "India",
+      tips: ["Check GST compliance", "Verify factory"]
+    };
+  }
+
+  res.json(result);
 });
 
-app.listen(4000, () => {
-  console.log("Server running on port 4000");
-});
+app.listen(4000, () => console.log("Server running on port 4000"));
